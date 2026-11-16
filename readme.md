@@ -1,11 +1,11 @@
-Script to set up a new server with Coolify, CrowdSec, rate limiting, and some other things.
+Script to set up a new Coolify node server with CrowdSec, rate limiting, and some other things. See [coolify-setup](https://github.com/BOOST-Creative/coolify-setup) for central Coolify server setup.
 
 CrowdSec is included and should work out of the box with any service. It also supports Cloudflare proxying.
 
 Rate limiting can be configured in [proxy/docker-compose.yml](proxy/docker-compose.yml). There is an existing snippet for rate limiting on WordPress websites. (You would use `- caddy_0.1_import=wordpress_rate_limit` in the labels section of the service.)
 
 ```bash
-apt update && apt install gpg git unzip -y && git clone https://github.com/BOOST-Creative/coolify-setup.git --depth 1 /tmp/cs && /tmp/cs/setup.sh
+apt update && apt install gpg git unzip -y && git clone https://github.com/BOOST-Creative/coolify-node-setup.git --depth 1 /tmp/cs && /tmp/cs/setup.sh
 ```
 
 **Notes:**
@@ -15,45 +15,11 @@ apt update && apt install gpg git unzip -y && git clone https://github.com/BOOST
 
 ## Initial Coolify setup
 
-After running the script and logging back in via SSH, you can access the Coolify web interface at [http://localhost:8000](http://localhost:8000).
+Hook the Coolify up to the server via Coolify web UI.
 
-Create your account, then go to Servers > localhost > Configuration and change the port to your chosen SSH port.
-
-In the Proxy tab, stop the proxy and switch to use Caddy. You may need to `sudo systemctl restart docker` to get it to stick.
+On the server's Proxy page, stop the proxy and switch to use Caddy. You may need to `sudo systemctl restart docker` to get it to stick.
 
 After the proxy is switched to Caddy, replace the entire proxy configuration with the content of [proxy/docker-compose.yml](proxy/docker-compose.yml).
-
-Finally, click `Dynamic Configurations` and add the following to access Coolify from outside the server:
-
-**admin.caddy**
-
-```
-https://coolify.example.com {
-    import crowdsec
-    rate_limit {
-        log_key
-        zone login_attempts {
-            match {
-                path /login
-                method POST
-            }
-            key {client_ip}
-            window 1m
-            events 2
-        }
-    }
-    tls internal
-    handle /app/* {
-        reverse_proxy coolify-realtime:6001
-    }
-    handle /terminal/ws {
-        reverse_proxy coolify-realtime:6002
-    }
-    reverse_proxy coolify:8080
-}
-```
-
-Please do not change the admin URL directly on the Coolify Settings page.
 
 ## CrowdSec
 
@@ -158,7 +124,3 @@ sudo ufw save
 We're using the Caddy proxy for Coolify because it's a little easier to run services with self-signed certs (`caddy_0.tls=internal`) and set up redirects. Generally we want to use a self-signed cert and strict SSL through Cloudflare so we don't need to worry about expiring certs.
 
 If a service is not proxied through Cloudflare, removing `caddy_0.tls=internal` and restarting the service will generate a cert.
-
-## TODO
-
-- [ ] IP whitelist.
