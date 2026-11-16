@@ -15,12 +15,12 @@ CUR_TIMEZONE=$(timedatectl show | grep zone | sed 's/Timezone=//g')
 KOPIA_PASSWORD=$(tr </dev/urandom -dc A-Z-a-z-0-9 | head -c"${1:-10}")
 ARCHITECTURE=$(dpkg --print-architecture)
 case "$ARCHITECTURE" in
-  amd64) NVIM_ARCH=x86_64 ;;
-  arm64) NVIM_ARCH=arm64 ;;
-  *)
-    echo "Unsupported architecture: $ARCHITECTURE (expected amd64 or arm64)" >&2
-    exit 1
-    ;;
+amd64) NVIM_ARCH=x86_64 ;;
+arm64) NVIM_ARCH=arm64 ;;
+*)
+  echo "Unsupported architecture: $ARCHITECTURE (expected amd64 or arm64)" >&2
+  exit 1
+  ;;
 esac
 
 # intro message
@@ -113,9 +113,6 @@ curl -fL -o /tmp/nvim.tar.gz "https://github.com/neovim/neovim/releases/latest/d
 sudo tar -C /opt -xzf /tmp/nvim.tar.gz
 sudo ln -sfn "/opt/nvim-linux-${NVIM_ARCH}/bin/nvim" /usr/local/bin/nvim
 
-# install coolify
-curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash
-
 # docker stuff
 echo -e "${CYAN}Setting up docker containers...${ENDCOLOR}"
 
@@ -188,9 +185,7 @@ rm -f "$zoxide_installer"
 
 # clone wordpress repo and copy config
 mkdir -p "/etc/coolify-setup/mariadb"
-mkdir -p "/etc/coolify-setup/valkey"
 git clone https://github.com/BOOST-Creative/coolify-wordpress-8 "/tmp/wp" --depth=1
-cp "/tmp/wp/config/valkey.conf" "/etc/coolify-setup/valkey/valkey.conf"
 cp "/tmp/wp/config/my.cnf" "/etc/coolify-setup/mariadb/my.cnf"
 cp "/tmp/wp/config/db-entrypoint.sh" "/etc/coolify-setup/mariadb/db-entrypoint.sh"
 chmod +x "/etc/coolify-setup/mariadb/db-entrypoint.sh"
